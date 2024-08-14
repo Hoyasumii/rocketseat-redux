@@ -59,7 +59,7 @@ export function Form<T extends string>({
       formRef.current?.reset();
       return;
     }
-    
+
     onFailed(formData);
   };
 
