@@ -1,9 +1,11 @@
 import {
+  FormEvent,
   HTMLAttributes,
   HTMLInputTypeAttribute,
   RefObject,
   useRef,
 } from "react";
+import { ZodSchema } from "zod";
 
 type Field = {
   type: HTMLInputTypeAttribute;
@@ -16,9 +18,9 @@ type Props<T extends string> = Omit<
   HTMLAttributes<HTMLFormElement>,
   "onSubmit"
 > & {
-  validator?(data: FormItems<T>): boolean;
-  onSuccess?(data: FormItems<T>, formRef?: RefObject<HTMLFormElement>): void;
-  onFailed?(data: FormItems<T>, formRef?: RefObject<HTMLFormElement>): void;
+  validator: ZodSchema;
+  onSuccess(data: FormItems<T>, formRef?: RefObject<HTMLFormElement>): void;
+  onFailed(data: FormItems<T>, formRef?: RefObject<HTMLFormElement>): void;
 };
 
 export function Form<T extends string>({
@@ -29,14 +31,16 @@ export function Form<T extends string>({
   ...props
 }: Props<T>) {
   if (Object.hasOwn(props, "onSubmit"))
-    throw new Error(
-      "DO_NOT_USE_OR_YOU_WILL_BE_FIRED_EXPERIMENTAL_FORM_ACTIONS"
-    );
+    throw new Error(`Do not use "onSubmit" method.`);
 
   const formRef = useRef<HTMLFormElement>(null);
 
-  const submit = (form: FormData) => {
+  const submit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = new FormData(formRef.current!);
+
     const formData: FormItems<T> = {} as FormItems<T>;
+    const formToValidate: { [value in T]: string } = {} as any;
 
     Array.from(form.entries()).forEach((items) => {
       (formData as any)[items[0]] = {
@@ -47,25 +51,20 @@ export function Form<T extends string>({
         )?.type,
         value: items[1],
       };
+      (formToValidate as any)[items[0]] = items[1];
     });
 
-    formRef.current?.reset();
-
-    if (onSuccess) {
+    if (validator.safeParse(formToValidate).success) {
       onSuccess(formData);
+      formRef.current?.reset();
+      return;
     }
-
-    // if (validator && validator(formData) && onSuccess) {
-    //   onSuccess(formData);
-    // } else {
-    //   if (onFailed) {
-    //     onFailed(formData);
-    //   }
-    // }
+    
+    onFailed(formData);
   };
 
   return (
-    <form action={submit} ref={formRef} {...props}>
+    <form onSubmit={submit} ref={formRef} {...props}>
       {children}
     </form>
   );

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "start:dev": "next dev --turbo",
+    "start:dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -14,7 +14,8 @@
     "react": "^19.0.0-rc-d48603a5-20240813",
     "react-dom": "^19.0.0-rc-d48603a5-20240813",
     "react-redux": "^9.1.2",
-    "sass": "^1.77.8"
+    "sass": "^1.77.8",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "typescript": "^5",
